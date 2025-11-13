@@ -4,7 +4,9 @@
 #include "MyEGG.h"
 
 #include "Components/SphereComponent.h"
-
+#include "UObject/ConstructorHelpers.h"
+#include "TimerManager.h"
+#include "Engine/StaticMesh.h"
 #include "Blueprint/UserWidget.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
@@ -30,11 +32,12 @@ AMyEgg::AMyEgg()
 	RootComponent = MeshComp;
 
 	// デフォルトのメッシュを読み込み（エディタで差し替え可能）
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Engine/Sphere_B29C5256"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 	if (MeshAsset.Succeeded())
 	{
 		MeshComp->SetStaticMesh(MeshAsset.Object);
 	}
+
 
 	// 衝突設定
 	MeshComp->SetCollisionProfileName(TEXT("Pawn"));
@@ -81,7 +84,6 @@ AMyEgg::AMyEgg()
 	// Input Action「IA_Boost」を読み込む
 	BoostAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/Boost"));
 
-
 	// デフォルト値
 	bIsGoalReached = false;
 }
@@ -93,6 +95,7 @@ void AMyEgg::BeginPlay()
 
 	//
 	MeshComp->SetMobility(EComponentMobility::Movable);
+	MeshComp->SetCollisionProfileName(TEXT("PhysicsActor")); // 物理用プロファイル
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetEnableGravity(true);
 
@@ -101,12 +104,19 @@ void AMyEgg::BeginPlay()
 		MeshComp->SetStaticMesh(PlayerMesh);
 	}
 
-	//Add Input Mapping Context
-	if (const APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	//
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (PC)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (ULocalPlayer* LP = PC->GetLocalPlayer())
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP))
+			{
+				if (DefaultMappingContext)
+				{
+					Subsystem->AddMappingContext(DefaultMappingContext, 0);
+				}
+			}
 		}
 	}
 }
@@ -325,6 +335,7 @@ void AMyEgg::Boost()
 	if (!bCanBoost || bIsBoostOnCooldown || !BoostEffect) return;
 
 	bCanBoost = false;
+	bIsBoostOnCooldown = true; // クールダウン開始（先にON）
 	bIsRising = true; // 上昇開始
 
 	// NiagaraをSpawn（アタッチせずにワールドに置く）
@@ -342,9 +353,17 @@ void AMyEgg::Boost()
 	//	3.0f, // 3秒後にブースト解除
 	//	false
 	//);
+	// 3秒後にブースト終了
+	GetWorldTimerManager().SetTimer(BoostTimerHandle, this, &AMyEgg::EndBoost, 3.0f, false);
 
-	// 3秒後に終了
-	GetWorld()->GetTimerManager().SetTimer(BoostTimerHandle, this, &AMyEgg::EndBoost, 3.0f, false);
+	// クールダウンも3秒で同時に解除（重ねる）
+	GetWorldTimerManager().SetTimer(BoostCooldownTimerHandle, [this]()
+		{
+			bIsBoostOnCooldown = false;
+			bCanBoost = true;
+			UE_LOG(LogTemp, Warning, TEXT("Boost cooldown ended"));
+		}, 6.0f, false);
+
 }
 
 void AMyEgg::EndBoost()
@@ -356,14 +375,6 @@ void AMyEgg::EndBoost()
 	}
 
 	bIsRising = false; // 上昇停止
-	bIsBoostOnCooldown = true; // クールダウン開始
-
-	GetWorld()->GetTimerManager().SetTimer(BoostCooldownTimerHandle, [this]()
-		{
-			bIsBoostOnCooldown = false;
-			bCanBoost = true;
-			UE_LOG(LogTemp, Warning, TEXT("Boost cooldown ended"));
-		}, BoostCooldownTime, false);
 }
 
 
