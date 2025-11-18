@@ -246,8 +246,8 @@ void AMyEgg::ControlBall(const FInputActionValue& Value)
 	FVector Forward = FRotationMatrix(CameraRot).GetScaledAxis(EAxis::X);
 	FVector Right = FRotationMatrix(CameraRot).GetScaledAxis(EAxis::Y);
 
-	Forward.Z = 0.0f;
-	Right.Z = 0.0f;
+	//Forward.Z = 0.0f;
+	//Right.Z = 0.0f;
 	Forward.Normalize();
 	Right.Normalize();
 

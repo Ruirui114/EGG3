@@ -117,7 +117,7 @@ private:
 	bool bIsBoostOnCooldown = false; // クールダウン中
 
 	/** 各種設定値 */
-	float Speed = 300.0f;
+	float Speed = 200.0f;
 	float Health = 100.0f;
 	float JumpImpulse = 1000.0f;
 	// 上昇スピード

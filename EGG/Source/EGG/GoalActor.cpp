@@ -2,7 +2,7 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
-#include "EggPlayer.h"
+#include "MyEGG.h"
 
 AGoalActor::AGoalActor()
 {
@@ -25,7 +25,7 @@ void AGoalActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 	bool bFromSweep, const FHitResult& SweepResult)
 {
 	// AEggPlayerと接触したら
-	if (AEggPlayer* Player = Cast<AEggPlayer>(OtherActor))
+	if (AMyEgg* Player = Cast<AMyEgg>(OtherActor))
 	{
 		Player->OnGoalReached(); // ← プレイヤーに知らせる
 
