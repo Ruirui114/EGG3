@@ -48,11 +48,15 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	//UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComp;
 
 	UPROPERTY(EditAnywhere, Category = "Player")
 	UStaticMesh* PlayerMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Physics")
+	UPhysicalMaterial* PhysicsMaterial;
 
 	/** カメラ関係 */
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -94,7 +98,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Boost")
 	float BoostCooldownTime = 5.0f;  // クールダウン時間（秒）
 
-	FVector BoostOffset = FVector(0, 0, 50); // プレイヤーの上に表示
+	FVector BoostOffset = FVector(0, 0, 80); // プレイヤーの上に表示
 
 	/** タイマー */
 	FTimerHandle BoostTimerHandle;
@@ -117,9 +121,10 @@ private:
 	bool bIsBoostOnCooldown = false; // クールダウン中
 
 	/** 各種設定値 */
-	float Speed = 200.0f;
+	float Speed = 600.0f;
 	float Health = 100.0f;
 	float JumpImpulse = 1000.0f;
+	float ForcePower = 150000.0f;
 	// 上昇スピード
 	float BoostRiseSpeed = 100.f; // 1秒間に30cm上がる
 	/** 空中での操作の強さ（0.0〜1.0） */

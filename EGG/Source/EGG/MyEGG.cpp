@@ -104,7 +104,11 @@ void AMyEgg::BeginPlay()
 		MeshComp->SetStaticMesh(PlayerMesh);
 	}
 
-	//
+	if (MeshComp && PhysicsMaterial)
+	{
+		MeshComp->SetPhysMaterialOverride(PhysicsMaterial);
+	}
+
 	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
 	if (PC)
 	{
@@ -136,6 +140,7 @@ void AMyEgg::Tick(float DeltaTime)
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
+
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params);
 
 	// Boostエフェクトの位置を更新
@@ -163,6 +168,12 @@ void AMyEgg::Tick(float DeltaTime)
 		FVector Vel = MeshComp->GetPhysicsLinearVelocity();
 		if (Vel.Z < 0) Vel.Z = 0;
 		MeshComp->SetPhysicsLinearVelocity(Vel);
+
+
+		//// 横方向の減速
+		//FVector HorizontalVel = FVector(Vel.X, Vel.Y, 0);
+		//HorizontalVel *= 0.95f;  // ← 摩擦 (0.8〜0.98で調整)
+		//MeshComp->SetPhysicsLinearVelocity(FVector(HorizontalVel.X, HorizontalVel.Y, Vel.Z));
 	}
 	else
 	{
@@ -236,6 +247,25 @@ void AMyEgg::OnGoalReached()
 
 void AMyEgg::ControlBall(const FInputActionValue& Value)
 {
+	//if (bIsGoalReached || !MeshComp) return;
+
+	//FVector2D MoveValue = Value.Get<FVector2D>();
+	//if (MoveValue.IsNearlyZero()) return;
+
+	//FRotator CameraRot = Camera->GetComponentRotation();
+	//FVector Forward = FRotationMatrix(CameraRot).GetScaledAxis(EAxis::X);
+	//FVector Right = FRotationMatrix(CameraRot).GetScaledAxis(EAxis::Y);
+
+	//Forward.Z = 0;
+	//Right.Z = 0;
+	//Forward.Normalize();
+	//Right.Normalize();
+
+	//FVector MoveDir = (Forward * MoveValue.Y + Right * MoveValue.X).GetSafeNormal();
+
+	//float Force = 200000.0f; // ← これなら確実に動く
+
+	//MeshComp->AddForce(MoveDir * Force);
 	if (bIsGoalReached) return;
 
 	FVector2D MoveValue = Value.Get<FVector2D>();
@@ -278,7 +308,7 @@ void AMyEgg::ControlBall(const FInputActionValue& Value)
 	}
 
 	// --- 通常の移動処理 ---
-	if (FlatVel.Size() < 2000.0f)
+	if (FlatVel.Size() < 1000.0f)
 	{
 		float ControlStrength = bIsGrounded ? 1.0f : AirControlFactor;
 		MeshComp->AddForce(MoveDir * Speed * MeshComp->GetMass() * ControlStrength);

@@ -89,6 +89,8 @@ void AEggPlayer::BeginPlay()
 		Sphere->SetStaticMesh(PlayerMesh);
 	}
 
+
+
 	//Add Input Mapping Context
 	if (const APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{

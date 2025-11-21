@@ -3,6 +3,7 @@
 #include "Components/BoxComponent.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "MyEGG.h"
 #include "EggPlayer.h" 
 
 ABreakActor::ABreakActor()
@@ -40,7 +41,7 @@ void ABreakActor::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Ot
     if (bIsBroken) return;
 
     // プレイヤーが乗ったか確認
-    if (OtherActor && OtherActor->IsA(AEggPlayer::StaticClass()))
+    if (OtherActor && OtherActor->IsA(AMyEgg::StaticClass()))
     {
         // 1秒後に壊す
         GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABreakActor::BreakPlatform, 1.0f, false);
